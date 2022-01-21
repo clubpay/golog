@@ -16,6 +16,7 @@ type config struct {
 	environment     string
 	skipCaller      int
 	syslogTag       string
+	encoder         string
 }
 
 var defaultConfig = config{
@@ -25,6 +26,7 @@ var defaultConfig = config{
 	release:         "",
 	environment:     "",
 	skipCaller:      1,
+	encoder:         "console",
 	TimeEncoder:     timeEncoder,
 	LevelEncoder:    zapcore.CapitalLevelEncoder,
 	DurationEncoder: zapcore.StringDurationEncoder,
@@ -71,5 +73,17 @@ func WithSyslog(tag string) Option {
 func WithMongoDB(dsn string) Option {
 	return func(cfg *config) {
 
+	}
+}
+
+func WithJSON() Option {
+	return func(cfg *config) {
+		cfg.encoder = "json"
+	}
+}
+
+func WithConsole() Option {
+	return func(cfg *config) {
+		cfg.encoder = "console"
 	}
 }

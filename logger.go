@@ -2,14 +2,12 @@ package log
 
 import (
 	"fmt"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"io"
 	"os"
 	"runtime/debug"
 	"strings"
-	"sync"
-
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 /*
@@ -21,11 +19,11 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-// ronyLogger is a wrapper around zap.Logger and adds a good few features to it.
+// logger is a wrapper around zap.Logger and adds a good few features to it.
 // It provides layered logs which could be used by separate packages, and could be turned off or on
 // separately. Separate layers could also have independent log levels.
 // Whenever you change log level it propagates through its children.
-type ronyLogger struct {
+type logger struct {
 	prefix     string
 	skipCaller int
 	encoder    zapcore.Encoder
@@ -34,24 +32,30 @@ type ronyLogger struct {
 	lvl        zap.AtomicLevel
 }
 
-func New(opts ...Option) *ronyLogger {
+func New(opts ...Option) *logger {
+	encodeBuilder := EncoderBuilder().
+		WithTimeKey("ts").
+		WithLevelKey("level").
+		WithNameKey("name").
+		WithCallerKey("caller").
+		WithMessageKey("msg")
+
 	cfg := defaultConfig
 	for _, opt := range opts {
 		opt(&cfg)
 	}
 
-	l := &ronyLogger{
+	l := &logger{
 		lvl:        zap.NewAtomicLevelAt(cfg.level),
 		skipCaller: cfg.skipCaller,
 	}
 
-	l.encoder = EncoderBuilder().
-		WithTimeKey("ts").
-		WithLevelKey("level").
-		WithNameKey("name").
-		WithCallerKey("caller").
-		WithMessageKey("msg").
-		ConsoleEncoder()
+	switch cfg.encoder {
+	case "json":
+		l.encoder = encodeBuilder.JsonEncoder()
+	case "console":
+		l.encoder = encodeBuilder.ConsoleEncoder()
+	}
 
 	cores := append([]zapcore.Core{},
 		zapcore.NewCore(l.encoder, zapcore.Lock(os.Stdout), l.lvl),
@@ -85,41 +89,37 @@ func New(opts ...Option) *ronyLogger {
 	return l
 }
 
-func newNOP() *ronyLogger {
-	l := &ronyLogger{}
+func newNOP() *logger {
+	l := &logger{}
 	l.z = zap.NewNop()
 	l.sz = l.z.Sugar()
 
 	return l
 }
 
-var (
-	once sync.Once
-)
-
-func (l *ronyLogger) Sugared() *sugaredRonyLogger {
+func (l *logger) Sugared() *sugaredRonyLogger {
 	return &sugaredRonyLogger{
 		l: l,
 	}
 }
 
-func (l *ronyLogger) Sync() error {
+func (l *logger) Sync() error {
 	return l.z.Sync()
 }
 
-func (l *ronyLogger) SetLevel(lvl Level) {
+func (l *logger) SetLevel(lvl Level) {
 	l.lvl.SetLevel(lvl)
 }
 
-func (l *ronyLogger) With(name string) Logger {
+func (l *logger) With(name string) Logger {
 	return l.WithSkip(name, l.skipCaller)
 }
 
-func (l *ronyLogger) WithSkip(name string, skipCaller int) Logger {
+func (l *logger) WithSkip(name string, skipCaller int) Logger {
 	return l.with(l.z.Core(), name, skipCaller)
 }
 
-func (l *ronyLogger) WithCore(enc Encoder, w io.Writer) Logger {
+func (l *logger) WithCore(enc Encoder, w io.Writer) Logger {
 	core := zapcore.NewTee(
 		l.z.Core(),
 		zapcore.NewCore(enc, zapcore.AddSync(w), l.lvl),
@@ -128,12 +128,12 @@ func (l *ronyLogger) WithCore(enc Encoder, w io.Writer) Logger {
 	return l.with(core, "", l.skipCaller)
 }
 
-func (l *ronyLogger) with(core zapcore.Core, name string, skip int) Logger {
+func (l *logger) with(core zapcore.Core, name string, skip int) Logger {
 	prefix := l.prefix
 	if name != "" {
 		prefix = fmt.Sprintf("%s[%s]", l.prefix, name)
 	}
-	childLogger := &ronyLogger{
+	childLogger := &logger{
 		prefix:     prefix,
 		skipCaller: l.skipCaller,
 		encoder:    l.encoder.Clone(),
@@ -154,7 +154,7 @@ func (l *ronyLogger) with(core zapcore.Core, name string, skip int) Logger {
 	return childLogger
 }
 
-func (l *ronyLogger) addPrefix(in string) (out string) {
+func (l *logger) addPrefix(in string) (out string) {
 	if l.prefix != "" {
 		sb := &strings.Builder{}
 		sb.WriteString(l.prefix)
@@ -168,24 +168,25 @@ func (l *ronyLogger) addPrefix(in string) (out string) {
 	return in
 }
 
-func (l *ronyLogger) WarnOnErr(guideTxt string, err error, fields ...Field) {
+func (l *logger) WarnOnErr(guideTxt string, err error, fields ...Field) {
 	if err != nil {
 		fields = append(fields, zap.Error(err))
 		l.Warn(guideTxt, fields...)
 	}
 }
 
-func (l *ronyLogger) ErrorOnErr(guideTxt string, err error, fields ...Field) {
+func (l *logger) ErrorOnErr(guideTxt string, err error, fields ...Field) {
 	if err != nil {
 		fields = append(fields, zap.Error(err))
 		l.Error(guideTxt, fields...)
 	}
 }
 
-func (l *ronyLogger) checkLevel(lvl Level) bool {
+func (l *logger) checkLevel(lvl Level) bool {
 	if l == nil {
 		return false
 	}
+
 	// Check the level first to reduce the cost of disabled log calls.
 	// Since Panic and higher may exit, we skip the optimization for those levels.
 	if lvl < zapcore.DPanicLevel && !l.z.Core().Enabled(lvl) {
@@ -195,7 +196,7 @@ func (l *ronyLogger) checkLevel(lvl Level) bool {
 	return true
 }
 
-func (l *ronyLogger) Check(lvl Level, msg string) *CheckedEntry {
+func (l *logger) Check(lvl Level, msg string) *CheckedEntry {
 	if !l.checkLevel(lvl) {
 		return nil
 	}
@@ -203,7 +204,7 @@ func (l *ronyLogger) Check(lvl Level, msg string) *CheckedEntry {
 	return l.z.Check(lvl, l.addPrefix(msg))
 }
 
-func (l *ronyLogger) Debug(msg string, fields ...Field) {
+func (l *logger) Debug(msg string, fields ...Field) {
 	if l == nil {
 		return
 	}
@@ -215,7 +216,7 @@ func (l *ronyLogger) Debug(msg string, fields ...Field) {
 	}
 }
 
-func (l *ronyLogger) Info(msg string, fields ...Field) {
+func (l *logger) Info(msg string, fields ...Field) {
 	if l == nil {
 		return
 	}
@@ -227,7 +228,7 @@ func (l *ronyLogger) Info(msg string, fields ...Field) {
 	}
 }
 
-func (l *ronyLogger) Warn(msg string, fields ...Field) {
+func (l *logger) Warn(msg string, fields ...Field) {
 	if l == nil {
 		return
 	}
@@ -239,7 +240,7 @@ func (l *ronyLogger) Warn(msg string, fields ...Field) {
 	}
 }
 
-func (l *ronyLogger) Error(msg string, fields ...Field) {
+func (l *logger) Error(msg string, fields ...Field) {
 	if l == nil {
 		return
 	}
@@ -251,14 +252,14 @@ func (l *ronyLogger) Error(msg string, fields ...Field) {
 	}
 }
 
-func (l *ronyLogger) Fatal(msg string, fields ...Field) {
+func (l *logger) Fatal(msg string, fields ...Field) {
 	if l == nil {
 		return
 	}
 	l.z.Fatal(l.addPrefix(msg), fields...)
 }
 
-func (l *ronyLogger) RecoverPanic(funcName string, extraInfo interface{}, compensationFunc func()) {
+func (l *logger) RecoverPanic(funcName string, extraInfo interface{}, compensationFunc func()) {
 	if r := recover(); r != nil {
 		l.Error("Panic Recovered",
 			zap.String("Func", funcName),
@@ -273,7 +274,7 @@ func (l *ronyLogger) RecoverPanic(funcName string, extraInfo interface{}, compen
 }
 
 type sugaredRonyLogger struct {
-	l *ronyLogger
+	l *logger
 }
 
 func (l sugaredRonyLogger) Debugf(template string, args ...interface{}) {
