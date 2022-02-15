@@ -1,4 +1,4 @@
-module github.com/ronaksoft/golog
+module github.com/clubpay/golog
 
 go 1.17
 
