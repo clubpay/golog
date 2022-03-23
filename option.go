@@ -15,7 +15,6 @@ type config struct {
 	release         string
 	environment     string
 	skipCaller      int
-	syslogTag       string
 	encoder         string
 }
 
@@ -61,12 +60,6 @@ func WithSentry(dsn string, lvl Level) Option {
 	return func(cfg *config) {
 		cfg.sentryDSN = dsn
 		cfg.sentryLevel = lvl
-	}
-}
-
-func WithSyslog(tag string) Option {
-	return func(cfg *config) {
-		cfg.syslogTag = tag
 	}
 }
 

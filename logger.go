@@ -61,15 +61,6 @@ func New(opts ...Option) *logger {
 		zapcore.NewCore(l.encoder, zapcore.Lock(os.Stdout), l.lvl),
 	)
 
-	if cfg.syslogTag != "" {
-		syslogCore, err := NewSyslogCore(l.lvl, l.encoder, cfg.syslogTag)
-		if err != nil {
-			fmt.Println("got error on enabling syslog:", err)
-		} else {
-			cores = append(cores, syslogCore)
-		}
-	}
-
 	if cfg.sentryDSN != "" {
 		sentryCore := NewSentryCore(cfg.sentryDSN, cfg.release, cfg.environment, cfg.sentryLevel, nil)
 		if sentryCore != nil {
