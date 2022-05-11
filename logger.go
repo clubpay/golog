@@ -57,16 +57,11 @@ func New(opts ...Option) *logger {
 		l.encoder = encodeBuilder.ConsoleEncoder()
 	}
 
-	cores := append([]zapcore.Core{},
+	cores := []Core{
 		zapcore.NewCore(l.encoder, zapcore.Lock(os.Stdout), l.lvl),
-	)
-
-	if cfg.sentryDSN != "" {
-		sentryCore := NewSentryCore(cfg.sentryDSN, cfg.release, cfg.environment, cfg.sentryLevel, nil)
-		if sentryCore != nil {
-			cores = append(cores, sentryCore)
-		}
 	}
+
+	cores = append(cores, cfg.cores...)
 
 	l.z = zap.New(
 		zapcore.NewTee(cores...),
@@ -88,8 +83,8 @@ func newNOP() *logger {
 	return l
 }
 
-func (l *logger) Sugared() *sugaredRonyLogger {
-	return &sugaredRonyLogger{
+func (l *logger) Sugared() *sugaredLogger {
+	return &sugaredLogger{
 		l: l,
 	}
 }
@@ -264,54 +259,56 @@ func (l *logger) RecoverPanic(funcName string, extraInfo interface{}, compensati
 	}
 }
 
-type sugaredRonyLogger struct {
+type sugaredLogger struct {
 	l *logger
 }
 
-func (l sugaredRonyLogger) Debugf(template string, args ...interface{}) {
+var _ SugaredLogger = (*sugaredLogger)(nil)
+
+func (l sugaredLogger) Debugf(template string, args ...interface{}) {
 	l.l.sz.Debugf(l.l.addPrefix(template), args...)
 }
 
-func (l sugaredRonyLogger) Infof(template string, args ...interface{}) {
+func (l sugaredLogger) Infof(template string, args ...interface{}) {
 	l.l.sz.Infof(l.l.addPrefix(template), args...)
 }
 
-func (l sugaredRonyLogger) Printf(template string, args ...interface{}) {
+func (l sugaredLogger) Printf(template string, args ...interface{}) {
 	fmt.Printf(template, args...)
 }
 
-func (l sugaredRonyLogger) Warnf(template string, args ...interface{}) {
+func (l sugaredLogger) Warnf(template string, args ...interface{}) {
 	l.l.sz.Warnf(l.l.addPrefix(template), args...)
 }
 
-func (l sugaredRonyLogger) Errorf(template string, args ...interface{}) {
+func (l sugaredLogger) Errorf(template string, args ...interface{}) {
 	l.l.sz.Errorf(l.l.addPrefix(template), args...)
 }
 
-func (l sugaredRonyLogger) Fatalf(template string, args ...interface{}) {
+func (l sugaredLogger) Fatalf(template string, args ...interface{}) {
 	l.l.sz.Fatalf(l.l.addPrefix(template), args...)
 }
 
-func (l sugaredRonyLogger) Debug(args ...interface{}) {
+func (l sugaredLogger) Debug(args ...interface{}) {
 	l.l.sz.Debug(args...)
 }
 
-func (l sugaredRonyLogger) Info(args ...interface{}) {
+func (l sugaredLogger) Info(args ...interface{}) {
 	l.l.sz.Info(args...)
 }
 
-func (l sugaredRonyLogger) Warn(args ...interface{}) {
+func (l sugaredLogger) Warn(args ...interface{}) {
 	l.l.sz.Warn(args...)
 }
 
-func (l sugaredRonyLogger) Error(args ...interface{}) {
+func (l sugaredLogger) Error(args ...interface{}) {
 	l.l.sz.Error(args...)
 }
 
-func (l sugaredRonyLogger) Fatal(args ...interface{}) {
+func (l sugaredLogger) Fatal(args ...interface{}) {
 	l.l.sz.Fatal(args...)
 }
 
-func (l sugaredRonyLogger) Panic(args ...interface{}) {
+func (l sugaredLogger) Panic(args ...interface{}) {
 	l.l.sz.Panic(args...)
 }

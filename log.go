@@ -23,10 +23,11 @@ var (
 type (
 	Level           = zapcore.Level
 	Field           = zapcore.Field
+	Entry           = zapcore.Entry
 	FieldType       = zapcore.FieldType
 	CheckedEntry    = zapcore.CheckedEntry
 	DurationEncoder = zapcore.DurationEncoder
-	CallerEncode    = zapcore.CallerEncoder
+	CallerEncoder   = zapcore.CallerEncoder
 	LevelEncoder    = zapcore.LevelEncoder
 	TimeEncoder     = zapcore.TimeEncoder
 	Encoder         = zapcore.Encoder
@@ -40,7 +41,7 @@ type Logger interface {
 	Error(msg string, fields ...Field)
 	Fatal(msg string, fields ...Field)
 	Check(Level, string) *CheckedEntry
-	Sugared() *sugaredRonyLogger
+	Sugared() *sugaredLogger
 	SetLevel(level Level)
 	With(name string) Logger
 	WithCore(enc Encoder, w io.Writer) Logger

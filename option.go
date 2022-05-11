@@ -9,21 +9,15 @@ type config struct {
 	TimeEncoder     TimeEncoder
 	LevelEncoder    LevelEncoder
 	DurationEncoder DurationEncoder
-	CallerEncoder   CallerEncode
-	sentryDSN       string
-	sentryLevel     Level
-	release         string
-	environment     string
+	CallerEncoder   CallerEncoder
 	skipCaller      int
 	encoder         string
+
+	cores []Core
 }
 
 var defaultConfig = config{
 	level:           InfoLevel,
-	sentryDSN:       "",
-	sentryLevel:     WarnLevel,
-	release:         "",
-	environment:     "",
 	skipCaller:      1,
 	encoder:         "console",
 	TimeEncoder:     timeEncoder,
@@ -38,34 +32,9 @@ func WithLevel(lvl Level) Option {
 	}
 }
 
-func WithRelease(version string) Option {
-	return func(cfg *config) {
-		cfg.release = version
-	}
-}
-
-func WithEnvironment(env string) Option {
-	return func(cfg *config) {
-		cfg.environment = env
-	}
-}
-
 func WithSkipCaller(skip int) Option {
 	return func(cfg *config) {
 		cfg.skipCaller = skip
-	}
-}
-
-func WithSentry(dsn string, lvl Level) Option {
-	return func(cfg *config) {
-		cfg.sentryDSN = dsn
-		cfg.sentryLevel = lvl
-	}
-}
-
-func WithMongoDB(dsn string) Option {
-	return func(cfg *config) {
-
 	}
 }
 
@@ -78,5 +47,11 @@ func WithJSON() Option {
 func WithConsole() Option {
 	return func(cfg *config) {
 		cfg.encoder = "console"
+	}
+}
+
+func WithCore(core Core) Option {
+	return func(cfg *config) {
+		cfg.cores = append(cfg.cores, core)
 	}
 }

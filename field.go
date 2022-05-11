@@ -62,9 +62,9 @@ func Bool(key string, val bool) Field {
 	return Field{Key: key, Type: zapcore.BoolType, Integer: ival}
 }
 
-// Boolp constructs a field that carries a *bool. The returned Field will safely
+// BoolPtr constructs a field that carries a *bool. The returned Field will safely
 // and explicitly represent `nil` when appropriate.
-func Boolp(key string, val *bool) Field {
+func BoolPtr(key string, val *bool) Field {
 	if val == nil {
 		return nilField(key)
 	}
@@ -85,9 +85,9 @@ func Complex128(key string, val complex128) Field {
 	return Field{Key: key, Type: zapcore.Complex128Type, Interface: val}
 }
 
-// Complex128p constructs a field that carries a *complex128. The returned Field will safely
+// Complex128Ptr constructs a field that carries a *complex128. The returned Field will safely
 // and explicitly represent `nil` when appropriate.
-func Complex128p(key string, val *complex128) Field {
+func Complex128Ptr(key string, val *complex128) Field {
 	if val == nil {
 		return nilField(key)
 	}
@@ -101,9 +101,9 @@ func Complex64(key string, val complex64) Field {
 	return Field{Key: key, Type: zapcore.Complex64Type, Interface: val}
 }
 
-// Complex64p constructs a field that carries a *complex64. The returned Field will safely
+// Complex64Ptr constructs a field that carries a *complex64. The returned Field will safely
 // and explicitly represent `nil` when appropriate.
-func Complex64p(key string, val *complex64) Field {
+func Complex64Ptr(key string, val *complex64) Field {
 	if val == nil {
 		return nilField(key)
 	}
@@ -117,9 +117,9 @@ func Float64(key string, val float64) Field {
 	return Field{Key: key, Type: zapcore.Float64Type, Integer: int64(math.Float64bits(val))}
 }
 
-// Float64p constructs a field that carries a *float64. The returned Field will safely
+// Float64Ptr constructs a field that carries a *float64. The returned Field will safely
 // and explicitly represent `nil` when appropriate.
-func Float64p(key string, val *float64) Field {
+func Float64Ptr(key string, val *float64) Field {
 	if val == nil {
 		return nilField(key)
 	}
@@ -133,9 +133,9 @@ func Float32(key string, val float32) Field {
 	return Field{Key: key, Type: zapcore.Float32Type, Integer: int64(math.Float32bits(val))}
 }
 
-// Float32p constructs a field that carries a *float32. The returned Field will safely
+// Float32Ptr constructs a field that carries a *float32. The returned Field will safely
 // and explicitly represent `nil` when appropriate.
-func Float32p(key string, val *float32) Field {
+func Float32Ptr(key string, val *float32) Field {
 	if val == nil {
 		return nilField(key)
 	}
@@ -147,9 +147,9 @@ func Int(key string, val int) Field {
 	return Int64(key, int64(val))
 }
 
-// Intp constructs a field that carries a *int. The returned Field will safely
+// IntPtr constructs a field that carries a *int. The returned Field will safely
 // and explicitly represent `nil` when appropriate.
-func Intp(key string, val *int) Field {
+func IntPtr(key string, val *int) Field {
 	if val == nil {
 		return nilField(key)
 	}
@@ -161,9 +161,9 @@ func Int64(key string, val int64) Field {
 	return Field{Key: key, Type: zapcore.Int64Type, Integer: val}
 }
 
-// Int64p constructs a field that carries a *int64. The returned Field will safely
+// Int64Ptr constructs a field that carries a *int64. The returned Field will safely
 // and explicitly represent `nil` when appropriate.
-func Int64p(key string, val *int64) Field {
+func Int64Ptr(key string, val *int64) Field {
 	if val == nil {
 		return nilField(key)
 	}
@@ -175,9 +175,9 @@ func Int32(key string, val int32) Field {
 	return Field{Key: key, Type: zapcore.Int32Type, Integer: int64(val)}
 }
 
-// Int32p constructs a field that carries a *int32. The returned Field will safely
+// Int32Ptr constructs a field that carries a *int32. The returned Field will safely
 // and explicitly represent `nil` when appropriate.
-func Int32p(key string, val *int32) Field {
+func Int32Ptr(key string, val *int32) Field {
 	if val == nil {
 		return nilField(key)
 	}
@@ -189,9 +189,9 @@ func Int16(key string, val int16) Field {
 	return Field{Key: key, Type: zapcore.Int16Type, Integer: int64(val)}
 }
 
-// Int16p constructs a field that carries a *int16. The returned Field will safely
+// Int16Ptr constructs a field that carries a *int16. The returned Field will safely
 // and explicitly represent `nil` when appropriate.
-func Int16p(key string, val *int16) Field {
+func Int16Ptr(key string, val *int16) Field {
 	if val == nil {
 		return nilField(key)
 	}
@@ -203,9 +203,9 @@ func Int8(key string, val int8) Field {
 	return Field{Key: key, Type: zapcore.Int8Type, Integer: int64(val)}
 }
 
-// Int8p constructs a field that carries a *int8. The returned Field will safely
+// Int8Ptr constructs a field that carries a *int8. The returned Field will safely
 // and explicitly represent `nil` when appropriate.
-func Int8p(key string, val *int8) Field {
+func Int8Ptr(key string, val *int8) Field {
 	if val == nil {
 		return nilField(key)
 	}
@@ -217,9 +217,9 @@ func String(key string, val string) Field {
 	return Field{Key: key, Type: zapcore.StringType, String: val}
 }
 
-// Stringp constructs a field that carries a *string. The returned Field will safely
+// StringPtr constructs a field that carries a *string. The returned Field will safely
 // and explicitly represent `nil` when appropriate.
-func Stringp(key string, val *string) Field {
+func StringPtr(key string, val *string) Field {
 	if val == nil {
 		return nilField(key)
 	}
@@ -231,9 +231,9 @@ func Uint(key string, val uint) Field {
 	return Uint64(key, uint64(val))
 }
 
-// Uintp constructs a field that carries a *uint. The returned Field will safely
+// UintPtr constructs a field that carries a *uint. The returned Field will safely
 // and explicitly represent `nil` when appropriate.
-func Uintp(key string, val *uint) Field {
+func UintPtr(key string, val *uint) Field {
 	if val == nil {
 		return nilField(key)
 	}
@@ -245,9 +245,9 @@ func Uint64(key string, val uint64) Field {
 	return Field{Key: key, Type: zapcore.Uint64Type, Integer: int64(val)}
 }
 
-// Uint64p constructs a field that carries a *uint64. The returned Field will safely
+// Uint64Ptr constructs a field that carries a *uint64. The returned Field will safely
 // and explicitly represent `nil` when appropriate.
-func Uint64p(key string, val *uint64) Field {
+func Uint64Ptr(key string, val *uint64) Field {
 	if val == nil {
 		return nilField(key)
 	}
@@ -259,9 +259,9 @@ func Uint32(key string, val uint32) Field {
 	return Field{Key: key, Type: zapcore.Uint32Type, Integer: int64(val)}
 }
 
-// Uint32p constructs a field that carries a *uint32. The returned Field will safely
+// Uint32Ptr constructs a field that carries a *uint32. The returned Field will safely
 // and explicitly represent `nil` when appropriate.
-func Uint32p(key string, val *uint32) Field {
+func Uint32Ptr(key string, val *uint32) Field {
 	if val == nil {
 		return nilField(key)
 	}
@@ -273,9 +273,9 @@ func Uint16(key string, val uint16) Field {
 	return Field{Key: key, Type: zapcore.Uint16Type, Integer: int64(val)}
 }
 
-// Uint16p constructs a field that carries a *uint16. The returned Field will safely
+// Uint16Ptr constructs a field that carries a *uint16. The returned Field will safely
 // and explicitly represent `nil` when appropriate.
-func Uint16p(key string, val *uint16) Field {
+func Uint16Ptr(key string, val *uint16) Field {
 	if val == nil {
 		return nilField(key)
 	}
@@ -287,9 +287,9 @@ func Uint8(key string, val uint8) Field {
 	return Field{Key: key, Type: zapcore.Uint8Type, Integer: int64(val)}
 }
 
-// Uint8p constructs a field that carries a *uint8. The returned Field will safely
+// Uint8Ptr constructs a field that carries a *uint8. The returned Field will safely
 // and explicitly represent `nil` when appropriate.
-func Uint8p(key string, val *uint8) Field {
+func Uint8Ptr(key string, val *uint8) Field {
 	if val == nil {
 		return nilField(key)
 	}
@@ -301,9 +301,9 @@ func Uintptr(key string, val uintptr) Field {
 	return Field{Key: key, Type: zapcore.UintptrType, Integer: int64(val)}
 }
 
-// Uintptrp constructs a field that carries a *uintptr. The returned Field will safely
+// UintptrPtr constructs a field that carries a *uintptr. The returned Field will safely
 // and explicitly represent `nil` when appropriate.
-func Uintptrp(key string, val *uintptr) Field {
+func UintptrPtr(key string, val *uintptr) Field {
 	if val == nil {
 		return nilField(key)
 	}
@@ -345,9 +345,9 @@ func Time(key string, val time.Time) Field {
 	return Field{Key: key, Type: zapcore.TimeType, Integer: val.UnixNano(), Interface: val.Location()}
 }
 
-// Timep constructs a field that carries a *time.Time. The returned Field will safely
+// TimePtr constructs a field that carries a *time.Time. The returned Field will safely
 // and explicitly represent `nil` when appropriate.
-func Timep(key string, val *time.Time) Field {
+func TimePtr(key string, val *time.Time) Field {
 	if val == nil {
 		return nilField(key)
 	}
@@ -360,9 +360,9 @@ func Duration(key string, val time.Duration) Field {
 	return Field{Key: key, Type: zapcore.DurationType, Integer: int64(val)}
 }
 
-// Durationp constructs a field that carries a *time.Duration. The returned Field will safely
+// DurationPtr constructs a field that carries a *time.Duration. The returned Field will safely
 // and explicitly represent `nil` when appropriate.
-func Durationp(key string, val *time.Duration) Field {
+func DurationPtr(key string, val *time.Duration) Field {
 	if val == nil {
 		return nilField(key)
 	}
@@ -378,11 +378,30 @@ func Object(key string, val zapcore.ObjectMarshaler) Field {
 }
 
 // Inline constructs a Field that is similar to Object, but it
-// will add the elements of the provided ObjectMarshaler to the
+// will add the elements of the provided ObjectMarshaller to the
 // current namespace.
 func Inline(val zapcore.ObjectMarshaler) Field {
 	return zapcore.Field{
 		Type:      zapcore.InlineMarshalerType,
 		Interface: val,
 	}
+}
+
+// Error is shorthand for the common idiom NamedError("error", err).
+func Error(err error) Field {
+	return NamedError("error", err)
+}
+
+// NamedError constructs a field that lazily stores err.Error() under the
+// provided key. Errors which also implement fmt.Formatter (like those produced
+// by github.com/pkg/errors) will also have their verbose representation stored
+// under key+"Verbose". If passed a nil error, the field is a no-op.
+//
+// For the common case in which the key is simply "error", the Error function
+// is shorter and less repetitive.
+func NamedError(key string, err error) Field {
+	if err == nil {
+		return Skip()
+	}
+	return Field{Key: key, Type: zapcore.ErrorType, Interface: err}
 }

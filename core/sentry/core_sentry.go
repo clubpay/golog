@@ -1,6 +1,7 @@
-package log
+package sentry
 
 import (
+	log "github.com/clubpay/golog"
 	"time"
 
 	"github.com/getsentry/sentry-go"
@@ -18,18 +19,26 @@ import (
 
 type sentryCore struct {
 	zapcore.LevelEnabler
-	hub  *sentry.Hub
-	tags map[string]string
+	hub          *sentry.Hub
+	tags         map[string]string
+	flushTimeout time.Duration
 }
 
-func NewSentryCore(sentryDSN, release, environment string, level zapcore.Level, tags map[string]string) zapcore.Core {
-	if len(sentryDSN) == 0 {
-		return nil
+func New(dsn string, opts ...Option) log.Core {
+	cfg := config{
+		flushTimeout: time.Second * 5,
+		dsn:          dsn,
+		lvl:          log.WarnLevel,
 	}
+
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+
 	client, err := sentry.NewClient(sentry.ClientOptions{
-		Dsn:         sentryDSN,
-		Release:     release,
-		Environment: environment,
+		Dsn:         cfg.dsn,
+		Release:     cfg.release,
+		Environment: cfg.env,
 	})
 	if err != nil {
 		return zapcore.NewNopCore()
@@ -40,12 +49,13 @@ func NewSentryCore(sentryDSN, release, environment string, level zapcore.Level, 
 
 	return &sentryCore{
 		hub:          sentryHub,
-		tags:         tags,
-		LevelEnabler: level,
+		tags:         cfg.tags,
+		LevelEnabler: cfg.lvl,
+		flushTimeout: cfg.flushTimeout,
 	}
 }
 
-func (c *sentryCore) With(fs []zapcore.Field) zapcore.Core {
+func (c *sentryCore) With(fs []log.Field) log.Core {
 	return &sentryCore{
 		hub:          c.hub,
 		tags:         c.tags,
@@ -53,15 +63,15 @@ func (c *sentryCore) With(fs []zapcore.Field) zapcore.Core {
 	}
 }
 
-func (c *sentryCore) Check(ent zapcore.Entry, ce *zapcore.CheckedEntry) *zapcore.CheckedEntry {
-	if c.LevelEnabler.Enabled(ent.Level) {
+func (c *sentryCore) Check(ent log.Entry, ce *log.CheckedEntry) *log.CheckedEntry {
+	if c.Enabled(ent.Level) {
 		return ce.AddCore(ent, c)
 	}
 
 	return ce
 }
 
-func (c *sentryCore) Write(ent zapcore.Entry, fs []zapcore.Field) error {
+func (c *sentryCore) Write(ent log.Entry, fs []log.Field) error {
 	m := make(map[string]interface{}, len(fs))
 	enc := zapcore.NewMapObjectEncoder()
 	for _, f := range fs {
@@ -80,7 +90,7 @@ func (c *sentryCore) Write(ent zapcore.Entry, fs []zapcore.Field) error {
 	c.hub.CaptureEvent(event)
 
 	// We may be crashing the program, so should flush any buffered events.
-	if ent.Level > zapcore.ErrorLevel {
+	if ent.Level > log.ErrorLevel {
 		c.hub.Flush(time.Second)
 	}
 
@@ -88,26 +98,24 @@ func (c *sentryCore) Write(ent zapcore.Entry, fs []zapcore.Field) error {
 }
 
 func (c *sentryCore) Sync() error {
-	c.hub.Flush(time.Second * 3)
+	c.hub.Flush(c.flushTimeout)
 
 	return nil
 }
 
-func sentryLevel(lvl zapcore.Level) sentry.Level {
+func sentryLevel(lvl log.Level) sentry.Level {
 	switch lvl {
-	case zapcore.DebugLevel:
+	case log.DebugLevel:
 		return sentry.LevelDebug
-	case zapcore.InfoLevel:
+	case log.InfoLevel:
 		return sentry.LevelInfo
-	case zapcore.WarnLevel:
+	case log.WarnLevel:
 		return sentry.LevelWarning
-	case zapcore.ErrorLevel:
+	case log.ErrorLevel:
 		return sentry.LevelError
-	case zapcore.DPanicLevel:
+	case log.PanicLevel:
 		return sentry.LevelFatal
-	case zapcore.PanicLevel:
-		return sentry.LevelFatal
-	case zapcore.FatalLevel:
+	case log.FatalLevel:
 		return sentry.LevelFatal
 	default:
 		// Unrecognized levels are fatal.

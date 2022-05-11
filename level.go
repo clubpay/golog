@@ -16,5 +16,6 @@ const (
 	InfoLevel  = zapcore.InfoLevel
 	WarnLevel  = zapcore.WarnLevel
 	ErrorLevel = zapcore.ErrorLevel
+	PanicLevel = zapcore.PanicLevel
 	FatalLevel = zapcore.FatalLevel
 )
