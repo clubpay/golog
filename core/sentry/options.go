@@ -1,8 +1,9 @@
 package sentry
 
 import (
-	log "github.com/clubpay/golog"
 	"time"
+
+	log "github.com/clubpay/golog"
 )
 
 type config struct {

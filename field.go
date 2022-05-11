@@ -22,9 +22,10 @@ package log
 
 import (
 	"fmt"
-	"go.uber.org/zap/zapcore"
 	"math"
 	"time"
+
+	"go.uber.org/zap/zapcore"
 )
 
 var (
@@ -59,6 +60,7 @@ func Bool(key string, val bool) Field {
 	if val {
 		ival = 1
 	}
+
 	return Field{Key: key, Type: zapcore.BoolType, Integer: ival}
 }
 
@@ -68,6 +70,7 @@ func BoolPtr(key string, val *bool) Field {
 	if val == nil {
 		return nilField(key)
 	}
+
 	return Bool(key, *val)
 }
 
@@ -91,6 +94,7 @@ func Complex128Ptr(key string, val *complex128) Field {
 	if val == nil {
 		return nilField(key)
 	}
+
 	return Complex128(key, *val)
 }
 
@@ -107,6 +111,7 @@ func Complex64Ptr(key string, val *complex64) Field {
 	if val == nil {
 		return nilField(key)
 	}
+
 	return Complex64(key, *val)
 }
 
@@ -123,6 +128,7 @@ func Float64Ptr(key string, val *float64) Field {
 	if val == nil {
 		return nilField(key)
 	}
+
 	return Float64(key, *val)
 }
 
@@ -139,6 +145,7 @@ func Float32Ptr(key string, val *float32) Field {
 	if val == nil {
 		return nilField(key)
 	}
+
 	return Float32(key, *val)
 }
 
@@ -153,6 +160,7 @@ func IntPtr(key string, val *int) Field {
 	if val == nil {
 		return nilField(key)
 	}
+
 	return Int(key, *val)
 }
 
@@ -167,6 +175,7 @@ func Int64Ptr(key string, val *int64) Field {
 	if val == nil {
 		return nilField(key)
 	}
+
 	return Int64(key, *val)
 }
 
@@ -181,6 +190,7 @@ func Int32Ptr(key string, val *int32) Field {
 	if val == nil {
 		return nilField(key)
 	}
+
 	return Int32(key, *val)
 }
 
@@ -195,6 +205,7 @@ func Int16Ptr(key string, val *int16) Field {
 	if val == nil {
 		return nilField(key)
 	}
+
 	return Int16(key, *val)
 }
 
@@ -209,6 +220,7 @@ func Int8Ptr(key string, val *int8) Field {
 	if val == nil {
 		return nilField(key)
 	}
+
 	return Int8(key, *val)
 }
 
@@ -223,6 +235,7 @@ func StringPtr(key string, val *string) Field {
 	if val == nil {
 		return nilField(key)
 	}
+
 	return String(key, *val)
 }
 
@@ -237,6 +250,7 @@ func UintPtr(key string, val *uint) Field {
 	if val == nil {
 		return nilField(key)
 	}
+
 	return Uint(key, *val)
 }
 
@@ -251,6 +265,7 @@ func Uint64Ptr(key string, val *uint64) Field {
 	if val == nil {
 		return nilField(key)
 	}
+
 	return Uint64(key, *val)
 }
 
@@ -265,6 +280,7 @@ func Uint32Ptr(key string, val *uint32) Field {
 	if val == nil {
 		return nilField(key)
 	}
+
 	return Uint32(key, *val)
 }
 
@@ -279,6 +295,7 @@ func Uint16Ptr(key string, val *uint16) Field {
 	if val == nil {
 		return nilField(key)
 	}
+
 	return Uint16(key, *val)
 }
 
@@ -293,6 +310,7 @@ func Uint8Ptr(key string, val *uint8) Field {
 	if val == nil {
 		return nilField(key)
 	}
+
 	return Uint8(key, *val)
 }
 
@@ -307,6 +325,7 @@ func UintptrPtr(key string, val *uintptr) Field {
 	if val == nil {
 		return nilField(key)
 	}
+
 	return Uintptr(key, *val)
 }
 
@@ -342,6 +361,7 @@ func Time(key string, val time.Time) Field {
 	if val.Before(_minTimeInt64) || val.After(_maxTimeInt64) {
 		return Field{Key: key, Type: zapcore.TimeFullType, Interface: val}
 	}
+
 	return Field{Key: key, Type: zapcore.TimeType, Integer: val.UnixNano(), Interface: val.Location()}
 }
 
@@ -351,6 +371,7 @@ func TimePtr(key string, val *time.Time) Field {
 	if val == nil {
 		return nilField(key)
 	}
+
 	return Time(key, *val)
 }
 
@@ -366,6 +387,7 @@ func DurationPtr(key string, val *time.Duration) Field {
 	if val == nil {
 		return nilField(key)
 	}
+
 	return Duration(key, *val)
 }
 
@@ -403,5 +425,6 @@ func NamedError(key string, err error) Field {
 	if err == nil {
 		return Skip()
 	}
+
 	return Field{Key: key, Type: zapcore.ErrorType, Interface: err}
 }
