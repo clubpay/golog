@@ -2,7 +2,6 @@ package log
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"runtime/debug"
 	"strings"
@@ -106,13 +105,14 @@ func (l *logger) WithSkip(name string, skipCaller int) Logger {
 	return l.with(l.z.Core(), name, skipCaller)
 }
 
-func (l *logger) WithCore(enc Encoder, w io.Writer) Logger {
-	core := zapcore.NewTee(
-		l.z.Core(),
-		zapcore.NewCore(enc, zapcore.AddSync(w), l.lvl),
+func (l *logger) WithCore(core Core) Logger {
+	return l.with(
+		zapcore.NewTee(
+			l.z.Core(), core,
+		),
+		"",
+		l.skipCaller,
 	)
-
-	return l.with(core, "", l.skipCaller)
 }
 
 func (l *logger) with(core zapcore.Core, name string, skip int) Logger {

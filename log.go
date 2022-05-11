@@ -1,8 +1,6 @@
 package log
 
 import (
-	"io"
-
 	"go.uber.org/zap/zapcore"
 )
 
@@ -44,7 +42,7 @@ type Logger interface {
 	Sugared() *sugaredLogger
 	SetLevel(level Level)
 	With(name string) Logger
-	WithCore(enc Encoder, w io.Writer) Logger
+	WithCore(core Core) Logger
 }
 
 type SugaredLogger interface {

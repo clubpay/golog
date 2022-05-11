@@ -50,8 +50,8 @@ func WithConsole() Option {
 	}
 }
 
-func WithCore(core Core) Option {
+func WithCore(cores ...Core) Option {
 	return func(cfg *config) {
-		cfg.cores = append(cfg.cores, core)
+		cfg.cores = append(cfg.cores, cores...)
 	}
 }
