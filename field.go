@@ -428,3 +428,4 @@ func NamedError(key string, err error) Field {
 
 	return Field{Key: key, Type: zapcore.ErrorType, Interface: err}
 }
+

@@ -18,6 +18,10 @@ type core struct {
 }
 
 func New(apiKey string, opts ...Option) log.Core {
+	if apiKey == "" {
+		return zapcore.NewNopCore()
+	}
+
 	cfg := config{
 		flushTimeout: time.Second * 5,
 		apiKey:       apiKey,

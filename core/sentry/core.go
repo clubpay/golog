@@ -26,6 +26,10 @@ type sentryCore struct {
 }
 
 func New(dsn string, opts ...Option) log.Core {
+	if dsn == "" {
+		return zapcore.NewNopCore()
+	}
+
 	cfg := config{
 		flushTimeout: time.Second * 5,
 		dsn:          dsn,
