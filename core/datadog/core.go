@@ -2,6 +2,7 @@ package datadog
 
 import (
 	"context"
+	"encoding/json"
 	"net"
 	"os"
 	"time"
@@ -13,7 +14,14 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-type writeFunc func(buf *buffer.Buffer) error
+type tcpLog struct {
+	Source  *string `json:"source"`
+	Service *string `json:"service"`
+	Status  *string `json:"status"`
+	Message *string `json:"message"`
+}
+
+type writeFunc func(lvl log.Level, buf *buffer.Buffer) error
 
 type core struct {
 	cfg config
@@ -106,13 +114,9 @@ func (c *core) Check(ent log.Entry, ce *log.CheckedEntry) *log.CheckedEntry {
 }
 
 func (c *core) Write(ent log.Entry, fs []log.Field) error {
-	m := make(map[string]interface{}, len(fs))
 	enc := zapcore.NewMapObjectEncoder()
 	for _, f := range fs {
 		f.AddTo(enc)
-	}
-	for k, v := range enc.Fields {
-		m[k] = v
 	}
 
 	buf, err := c.enc.EncodeEntry(ent, fs)
@@ -120,10 +124,10 @@ func (c *core) Write(ent log.Entry, fs []log.Field) error {
 		return err
 	}
 
-	return c.wf(buf)
+	return c.wf(ent.Level, buf)
 }
 
-func (c *core) writeAPI(buf *buffer.Buffer) error {
+func (c *core) writeAPI(_ log.Level, buf *buffer.Buffer) error {
 	body := []datadog.HTTPLogItem{
 		{
 			Ddsource: c.cfg.source,
@@ -148,14 +152,23 @@ func (c *core) writeAPI(buf *buffer.Buffer) error {
 	return err
 }
 
-func (c *core) writeAgent(buf *buffer.Buffer) error {
+func (c *core) writeAgent(lvl log.Level, buf *buffer.Buffer) error {
 	defer buf.Free()
 
 	conn, err := net.Dial("tcp4", c.cfg.agentHostPort)
 	if err != nil {
 		return err
 	}
-	_, err = conn.Write(buf.Bytes())
+
+	data, _ := json.Marshal(
+		tcpLog{
+			Source:  c.cfg.source,
+			Service: c.cfg.service,
+			Status:  datadog.PtrString(lvl.String()),
+			Message: datadog.PtrString(buf.String()),
+		},
+	)
+	_, err = conn.Write(data)
 	_ = conn.Close()
 	if err != nil {
 		return err
