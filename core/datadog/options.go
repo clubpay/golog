@@ -1,7 +1,6 @@
 package datadog
 
 import (
-	"strings"
 	"time"
 
 	"github.com/DataDog/datadog-api-client-go/api/v2/datadog"
@@ -21,7 +20,9 @@ type config struct {
 	lvl           log.Level
 	flushTimeout  time.Duration
 
-	tags     *string
+	tags     map[string]string
+	tagsStr  *string
+	env      *string
 	source   *string
 	hostname *string
 	service  *string
@@ -43,19 +44,7 @@ func WithFlushTimeout(flushTimeout time.Duration) Option {
 
 func WithTags(tags map[string]string) Option {
 	return func(cfg *config) {
-		sb := strings.Builder{}
-		idx := 0
-		for k, v := range tags {
-			if idx != 0 {
-				sb.WriteString(",")
-			}
-			sb.WriteString(k)
-			sb.WriteString(":")
-			sb.WriteString(v)
-			idx++
-		}
-
-		cfg.tags = datadog.PtrString(sb.String())
+		cfg.tags = tags
 	}
 }
 
@@ -68,6 +57,12 @@ func WithServiceName(serviceName string) Option {
 func WithSource(source string) Option {
 	return func(cfg *config) {
 		cfg.source = datadog.PtrString(source)
+	}
+}
+
+func WithEnv(env string) Option {
+	return func(cfg *config) {
+		cfg.env = datadog.PtrString(env)
 	}
 }
 

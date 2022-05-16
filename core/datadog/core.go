@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net"
 	"os"
+	"strings"
 	"time"
 
 	"go.uber.org/zap/buffer"
@@ -15,6 +16,7 @@ import (
 )
 
 type tcpLog struct {
+	Env     *string `json:"env"`
 	Source  *string `json:"source"`
 	Service *string `json:"service"`
 	Status  *string `json:"status"`
@@ -45,6 +47,21 @@ func NewAPI(apiKey string, opts ...Option) log.Core {
 		opt(&cfg)
 	}
 
+	if len(cfg.tags) > 0 {
+		sb := strings.Builder{}
+		idx := 0
+		for k, v := range cfg.tags {
+			if idx != 0 {
+				sb.WriteString(",")
+			}
+			sb.WriteString(k)
+			sb.WriteString(":")
+			sb.WriteString(v)
+			idx++
+		}
+		cfg.tagsStr = datadog.PtrString(sb.String())
+	}
+
 	_ = os.Setenv("DD_SITE", cfg.site)
 	_ = os.Setenv("DD_API_KEY", cfg.apiKey)
 
@@ -72,6 +89,7 @@ func NewAgent(hostPort string, opts ...Option) log.Core {
 	cfg := config{
 		flushTimeout:  time.Second * 5,
 		agentHostPort: hostPort,
+		tags:          map[string]string{},
 	}
 
 	for _, opt := range opts {
@@ -131,7 +149,7 @@ func (c *core) writeAPI(_ log.Level, buf *buffer.Buffer) error {
 	body := []datadog.HTTPLogItem{
 		{
 			Ddsource: c.cfg.source,
-			Ddtags:   c.cfg.tags,
+			Ddtags:   c.cfg.tagsStr,
 			Hostname: c.cfg.hostname,
 			Message:  datadog.PtrString(buf.String()),
 			Service:  c.cfg.service,
@@ -162,6 +180,7 @@ func (c *core) writeAgent(lvl log.Level, buf *buffer.Buffer) error {
 
 	data, _ := json.Marshal(
 		tcpLog{
+			Env:     datadog.PtrString(c.cfg.tags["env"]),
 			Source:  c.cfg.source,
 			Service: c.cfg.service,
 			Status:  datadog.PtrString(lvl.String()),
