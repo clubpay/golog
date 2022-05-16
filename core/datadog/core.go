@@ -155,7 +155,7 @@ func (c *core) writeAPI(_ log.Level, buf *buffer.Buffer) error {
 func (c *core) writeAgent(lvl log.Level, buf *buffer.Buffer) error {
 	defer buf.Free()
 
-	conn, err := net.Dial("tcp4", c.cfg.agentHostPort)
+	conn, err := net.Dial("tcp", c.cfg.agentHostPort)
 	if err != nil {
 		return err
 	}
