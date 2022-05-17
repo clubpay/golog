@@ -1,6 +1,7 @@
 package datadog
 
 import (
+	"strings"
 	"time"
 
 	"github.com/DataDog/datadog-api-client-go/api/v2/datadog"
@@ -26,6 +27,35 @@ type config struct {
 	source   *string
 	hostname *string
 	service  *string
+}
+
+func (cfg *config) tagsToStr() {
+	if cfg.env != nil {
+		cfg.tags["env"] = *cfg.env
+	}
+	if cfg.source != nil {
+		cfg.tags["source"] = *cfg.source
+	}
+	if cfg.service != nil {
+		cfg.tags["service"] = *cfg.service
+	}
+	if cfg.hostname != nil {
+		cfg.tags["hostname"] = *cfg.hostname
+	}
+	if len(cfg.tags) > 0 {
+		sb := strings.Builder{}
+		idx := 0
+		for k, v := range cfg.tags {
+			if idx != 0 {
+				sb.WriteString(",")
+			}
+			sb.WriteString(k)
+			sb.WriteString(":")
+			sb.WriteString(v)
+			idx++
+		}
+		cfg.tagsStr = datadog.PtrString(sb.String())
+	}
 }
 
 type Option func(cfg *config)
