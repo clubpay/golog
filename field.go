@@ -25,6 +25,8 @@ import (
 	"math"
 	"time"
 
+	"go.uber.org/zap"
+
 	"go.uber.org/zap/zapcore"
 )
 
@@ -229,6 +231,11 @@ func String(key string, val string) Field {
 	return Field{Key: key, Type: zapcore.StringType, String: val}
 }
 
+// Strings constructs a field that carries a slice of strings.
+func Strings(key string, ss []string) Field {
+	return zap.Array(key, stringArray(ss))
+}
+
 // StringPtr constructs a field that carries a *string. The returned Field will safely
 // and explicitly represent `nil` when appropriate.
 func StringPtr(key string, val *string) Field {
@@ -427,4 +434,14 @@ func NamedError(key string, err error) Field {
 	}
 
 	return Field{Key: key, Type: zapcore.ErrorType, Interface: err}
+}
+
+type stringArray []string
+
+func (ss stringArray) MarshalLogArray(arr zapcore.ArrayEncoder) error {
+	for i := range ss {
+		arr.AppendString(ss[i])
+	}
+
+	return nil
 }

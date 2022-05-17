@@ -2,10 +2,9 @@ package datadog
 
 import (
 	"context"
-	"encoding/json"
+	"fmt"
 	"net"
 	"os"
-	"strings"
 	"time"
 
 	"go.uber.org/zap/buffer"
@@ -14,14 +13,6 @@ import (
 	log "github.com/clubpay/golog"
 	"go.uber.org/zap/zapcore"
 )
-
-type tcpLog struct {
-	Env     *string `json:"env"`
-	Source  *string `json:"source"`
-	Service *string `json:"service"`
-	Status  *string `json:"status"`
-	Message *string `json:"message"`
-}
 
 type writeFunc func(lvl log.Level, buf *buffer.Buffer) error
 
@@ -40,27 +31,15 @@ func NewAPI(apiKey string, opts ...Option) log.Core {
 
 	cfg := config{
 		flushTimeout: time.Second * 5,
+		site:         "datadoghq.eu",
 		apiKey:       apiKey,
+		tags:         map[string]string{},
 	}
 
 	for _, opt := range opts {
 		opt(&cfg)
 	}
-
-	if len(cfg.tags) > 0 {
-		sb := strings.Builder{}
-		idx := 0
-		for k, v := range cfg.tags {
-			if idx != 0 {
-				sb.WriteString(",")
-			}
-			sb.WriteString(k)
-			sb.WriteString(":")
-			sb.WriteString(v)
-			idx++
-		}
-		cfg.tagsStr = datadog.PtrString(sb.String())
-	}
+	cfg.tagsToStr()
 
 	_ = os.Setenv("DD_SITE", cfg.site)
 	_ = os.Setenv("DD_API_KEY", cfg.apiKey)
@@ -95,6 +74,7 @@ func NewAgent(hostPort string, opts ...Option) log.Core {
 	for _, opt := range opts {
 		opt(&cfg)
 	}
+	cfg.tagsToStr()
 
 	_ = os.Setenv("DD_SITE", cfg.site)
 	_ = os.Setenv("DD_API_KEY", cfg.apiKey)
@@ -111,6 +91,9 @@ func NewAgent(hostPort string, opts ...Option) log.Core {
 	}
 
 	c.wf = c.writeAgent
+	for k, v := range cfg.tags {
+		c.enc.AddString(fmt.Sprintf("tags.%s", k), v)
+	}
 
 	return c
 }
@@ -132,11 +115,6 @@ func (c *core) Check(ent log.Entry, ce *log.CheckedEntry) *log.CheckedEntry {
 }
 
 func (c *core) Write(ent log.Entry, fs []log.Field) error {
-	enc := zapcore.NewMapObjectEncoder()
-	for _, f := range fs {
-		f.AddTo(enc)
-	}
-
 	buf, err := c.enc.EncodeEntry(ent, fs)
 	if err != nil {
 		return err
@@ -178,22 +156,10 @@ func (c *core) writeAgent(lvl log.Level, buf *buffer.Buffer) error {
 		return err
 	}
 
-	data, _ := json.Marshal(
-		tcpLog{
-			Env:     datadog.PtrString(c.cfg.tags["env"]),
-			Source:  c.cfg.source,
-			Service: c.cfg.service,
-			Status:  datadog.PtrString(lvl.String()),
-			Message: datadog.PtrString(buf.String()),
-		},
-	)
-	_, err = conn.Write(data)
+	_, err = conn.Write(buf.Bytes())
 	_ = conn.Close()
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
 func (c *core) Sync() error {
