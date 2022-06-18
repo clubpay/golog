@@ -20,5 +20,6 @@ linters:
     - ineffassign
     - ifshort
     - wrapcheck
+    - nonamedreturns
   fast: true
 

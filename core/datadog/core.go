@@ -129,7 +129,7 @@ func (c *core) writeAPI(_ log.Level, buf *buffer.Buffer) error {
 			Ddsource: c.cfg.source,
 			Ddtags:   c.cfg.tagsStr,
 			Hostname: c.cfg.hostname,
-			Message:  datadog.PtrString(buf.String()),
+			Message:  buf.String(),
 			Service:  c.cfg.service,
 		},
 	}

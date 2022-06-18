@@ -3,7 +3,7 @@ module github.com/clubpay/golog
 go 1.17
 
 require (
-	github.com/DataDog/datadog-api-client-go v1.13.0
+	github.com/DataDog/datadog-api-client-go v1.14.0
 	github.com/getsentry/sentry-go v0.13.0
 	github.com/smartystreets/goconvey v1.6.4
 	go.uber.org/zap v1.21.0
